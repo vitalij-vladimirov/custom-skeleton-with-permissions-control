@@ -18,12 +18,15 @@ use Core\Service\ConfigReader;
 use Core\Service\DependencyInjector;
 use Core\Service\ExceptionHandler;
 use Throwable;
+use PDO;
 use ReflectionMethod;
 use ReflectionNamedType;
 
 class Bootstrap
 {
-    private DependencyInjector $di;
+    public DependencyInjector $di;
+    public PDO $db;
+
     private string $controller;
     private string $method;
     private ?string $identifier = null;
@@ -40,7 +43,20 @@ class Bootstrap
         PermissionsMiddleware::class,
     ];
 
+    public function __construct()
+    {
+        $this->loadApp();
+    }
+
     public function run(): void
+    {
+        $controller = $this->di->inject($this->controller);
+        $this->response = $controller->{$this->method}($this->request, new Response());
+
+        $this->respondSuccess();
+    }
+
+    private function loadApp(): self
     {
         try {
             $this->setDefaults();
@@ -49,18 +65,20 @@ class Bootstrap
             $this->validateController();
             $this->setupRequest();
             $this->setupDI();
+            $this->setupDatabaseConnection();
             $this->runMiddleware();
-            $this->runController();
         } catch (Throwable $exception) {
             (new ExceptionHandler())->handle($exception);
         }
+
+        return $this;
     }
 
     private function setDefaults(): void
     {
         $appConfig = (new ConfigReader())->read('app');
 
-        define('ENVIRONMENT', $appConfig['environment'] ?? Environment::PRODUCTION);
+        define('ENVIRONMENT', $appConfig['app']['environment'] ?? Environment::PRODUCTION);
     }
 
     private function setControllerClass(): void
@@ -163,6 +181,18 @@ class Bootstrap
         $this->di = new DependencyInjector();
     }
 
+    private function setupDatabaseConnection(): void
+    {
+        $db = (new ConfigReader())->read('database')['database'];
+
+        $this->db = new PDO(
+            sprintf('mysql:host=%s:%d;dbname=%s', $db['host'], $db['port'], $db['database']),
+            $db['username'],
+            $db['password']
+        );
+        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    }
+
     private function runMiddleware(): void
     {
         if (count($this->middleware) === 0) {
@@ -181,13 +211,7 @@ class Bootstrap
         }
     }
 
-    private function runController(): void
-    {
-        $controller = $this->di->inject($this->controller);
-        $this->response = $controller->{$this->method}($this->request, new Response());
-    }
-
-    private function respondWithResponse(): void
+    private function respondSuccess(): void
     {
         header('Content-Type: text/plain charset=UTF-8');
         header('Content-type: application/json');

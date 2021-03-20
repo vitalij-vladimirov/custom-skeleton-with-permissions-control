@@ -11,11 +11,14 @@
   ],
   "require": {
     "ext-json": "*",
-    "php": "7.4.*"
+    "php": "7.4.*",
+    "ext-fileinfo": "*",
+    "ext-pdo": "*"
   },
   "autoload": {
     "psr-4": {
       "App\\": "app/",
+      "DB\\": "database/",
       "Core\\": "core/"
     }
   }

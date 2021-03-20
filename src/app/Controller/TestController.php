@@ -19,9 +19,8 @@ class TestController
 
     public function get(Request $request, Response $response): Response
     {
-        echo $this->testService->testMethod()->format("Y-m-d H:i:s");
+        echo $this->testService->testMethod();
 
-        var_dump($request->getParams());
         exit;
 
         return $response;
