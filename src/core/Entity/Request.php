@@ -38,7 +38,7 @@ class Request
 
     public function getParams(): array
     {
-        return $this->params;
+        return array_merge($this->params, $this->content);
     }
 
     public function getParam($key): ?string

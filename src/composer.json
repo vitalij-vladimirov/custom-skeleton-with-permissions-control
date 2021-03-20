@@ -11,8 +11,7 @@
   ],
   "require": {
     "ext-json": "*",
-    "php": "7.4.*",
-    "level-2/dice": "^4.0"
+    "php": "7.4.*"
   },
   "autoload": {
     "psr-4": {

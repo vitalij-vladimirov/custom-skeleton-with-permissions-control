@@ -33,7 +33,8 @@ class HttpMethod
                 self::GET,
                 self::PUT,
                 self::PATCH,
-                self::DELETE
+                self::DELETE,
+                self::OPTIONS,
             ],
             true
         );

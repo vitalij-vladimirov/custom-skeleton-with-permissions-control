@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Exception\Api;
+namespace Core\Exception\Api;
 
-use App\Exception\BaseApiException;
+use Core\Exception\BaseApiException;
 use Core\Enum\ResponseCode;
 
 class BadRequestException extends BaseApiException

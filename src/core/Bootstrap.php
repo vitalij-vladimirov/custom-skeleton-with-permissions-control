@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Core;
 
-use App\Exception\Api\BadRequestException;
-use App\Exception\Api\InternalServerException;
-use App\Exception\Api\NotFoundException;
-use App\Exception\BaseApiException;
+use Core\Exception\Api\InternalServerException;
+use Core\Exception\Api\NotFoundException;
 use Core\Entity\Request;
 use Core\Entity\Response;
+use Core\Enum\Environment;
 use Core\Enum\HttpMethod;
 use Core\Enum\ResponseCode;
 use Core\Middleware\AuthenticationMiddleware;
 use Core\Middleware\MiddlewareInterface;
 use Core\Middleware\PermissionsMiddleware;
-use Dice\Dice;
+use Core\Service\ConfigReader;
+use Core\Service\DependencyInjector;
+use Core\Service\ExceptionHandler;
 use Throwable;
 use ReflectionMethod;
 use ReflectionNamedType;
 
 class Bootstrap
 {
+    private DependencyInjector $di;
     private string $controller;
     private string $method;
     private ?string $identifier = null;
@@ -38,50 +40,55 @@ class Bootstrap
         PermissionsMiddleware::class,
     ];
 
-    public function run()
+    public function run(): void
     {
         try {
+            $this->setDefaults();
             $this->setControllerClass();
             $this->setControllerMethod();
             $this->validateController();
             $this->setupRequest();
+            $this->setupDI();
             $this->runMiddleware();
             $this->runController();
         } catch (Throwable $exception) {
-            if (!$exception instanceof BaseApiException) {
-                $exception = new BadRequestException();
-            }
-
-            $this->respondWithException($exception);
+            (new ExceptionHandler())->handle($exception);
         }
+    }
+
+    private function setDefaults(): void
+    {
+        $appConfig = (new ConfigReader())->read('app');
+
+        define('ENVIRONMENT', $appConfig['environment'] ?? Environment::PRODUCTION);
     }
 
     private function setControllerClass(): void
     {
-        $path = explode('/', $_SERVER['REQUEST_URI']);
+        $path = explode('/', strtok($_SERVER["REQUEST_URI"], '?'));
         $path = array_slice($path, 1);
         foreach ($path as $key => $value) {
             $value = str_replace(['-', '_'], ' ', $value);
             $value = ucwords($value);
-            $path[$key] = str_replace(' ', '', $value);
+            $camelcasePath[$key] = str_replace(' ', '', $value);
         }
 
-        $controllerPath = sprintf('../app/Controller/%sController.php', implode('/', $path));
-        if (!file_exists($controllerPath) && HttpMethod::isIdentifierAllowed() && count($path) >= 2) {
-            $lastPathKey = array_key_last($path);
+        $controllerPath = sprintf('../app/Controller/%sController.php', implode('/', $camelcasePath));
+        if (!file_exists($controllerPath) && HttpMethod::isIdentifierAllowed() && count($camelcasePath) >= 2) {
+            $lastPathKey = array_key_last($camelcasePath);
             $this->identifier = $path[$lastPathKey];
-            unset($path[$lastPathKey]);
+            unset($camelcasePath[$lastPathKey]);
 
-            $controllerPath = sprintf('../app/Controller/%sController.php', implode('/', $path));
+            $controllerPath = sprintf('../app/Controller/%sController.php', implode('/', $camelcasePath));
         }
 
-        if (!file_exists($controllerPath) && in_array($this->method, [])) {
+        if (!file_exists($controllerPath)) {
             throw new NotFoundException();
         }
 
         require_once $controllerPath;
 
-        $this->controller = sprintf('\App\Controller\%sController', implode('\\', $path));
+        $this->controller = sprintf('\App\Controller\%sController', implode('\\', $camelcasePath));
     }
 
     private function setControllerMethod(): void
@@ -137,10 +144,11 @@ class Bootstrap
             case HttpMethod::POST:
             case HttpMethod::PUT:
             case HttpMethod::PATCH:
-                $content = file_get_contents("php://input");
+                $body = file_get_contents('php://input');
+                $content = $body !== '' ? json_decode($body, true) : [];
                 break;
             default:
-                $content = [];
+                $content = '';
         }
 
         if ($this->identifier !== null) {
@@ -148,6 +156,11 @@ class Bootstrap
         }
 
         $this->request = new Request($content, $headers);
+    }
+
+    private function setupDI(): void
+    {
+        $this->di = new DependencyInjector();
     }
 
     private function runMiddleware(): void
@@ -158,7 +171,7 @@ class Bootstrap
 
         foreach ($this->middleware as $middleware) {
             /** @var MiddlewareInterface $middlewareClass */
-            $middlewareClass = (new Dice())->create($middleware);
+            $middlewareClass = $this->di->inject($middleware);
 
             if (!$middlewareClass instanceof MiddlewareInterface) {
                 throw new InternalServerException();
@@ -170,7 +183,7 @@ class Bootstrap
 
     private function runController(): void
     {
-        $controller = (new Dice())->create($this->controller);
+        $controller = $this->di->inject($this->controller);
         $this->response = $controller->{$this->method}($this->request, new Response());
     }
 
@@ -205,23 +218,6 @@ class Bootstrap
         header('Content-Type: text/plain charset=UTF-8');
         header('Access-Control-Allow-Methods: ' . implode(',', $methods));
         http_response_code(ResponseCode::NO_CONTENT);
-
-        exit;
-    }
-
-    private function respondWithException(BaseApiException $throwable): void
-    {
-        header('Content-Type: text/plain charset=UTF-8');
-        header('Content-type: application/json');
-        http_response_code($throwable->getStatusCode());
-
-        echo json_encode(
-            [
-                'status' => 'error',
-                'message' => $throwable->getErrorMessage(),
-            ],
-            JSON_THROW_ON_ERROR
-        );
 
         exit;
     }
