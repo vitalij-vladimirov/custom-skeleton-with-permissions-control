@@ -10,8 +10,8 @@
     }
   ],
   "require": {
-    "ext-json": "*",
     "php": "7.4.*",
+    "ext-json": "*",
     "ext-fileinfo": "*",
     "ext-pdo": "*"
   },

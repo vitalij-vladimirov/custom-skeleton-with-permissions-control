@@ -10,7 +10,7 @@ class Request
     private array $content;
     /** @var string[] */
     private array $headers;
-    /** @var string[] */
+    /** @var mixed[]  */
     private array $params = [];
 
     public function __construct(array $content, array $headers)
@@ -19,11 +19,9 @@ class Request
         $this->headers = $headers;
     }
 
-    public function setContent(array $content): self
+    public function getContent(): array
     {
-        $this->content = $content;
-
-        return $this;
+        return $this->content;
     }
 
     public function getHeaders(): array
@@ -33,7 +31,7 @@ class Request
 
     public function getHeader($key): ?string
     {
-        return $this->headers[$key];
+        return $this->headers[$key] ?? null;
     }
 
     public function getParams(): array
@@ -41,7 +39,12 @@ class Request
         return array_merge($this->params, $this->content);
     }
 
-    public function getParam($key): ?string
+    /**
+     * @param $key
+     *
+     * @return object|array|string|int|float|bool|null
+     */
+    public function getParam($key)
     {
         return $this->params[$key] ?? $this->content[$key] ?? null;
     }
@@ -53,7 +56,7 @@ class Request
         return $this;
     }
 
-    public function addParam(string $key, string $param): self
+    public function addParam(string $key, $param): self
     {
         $this->params[$key] = $param;
 

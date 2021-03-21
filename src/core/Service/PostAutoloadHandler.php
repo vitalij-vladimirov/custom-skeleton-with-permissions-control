@@ -21,9 +21,9 @@ class PostAutoloadHandler
         try {
             $migrationsHandler->handle();
 
-            echo "\e[32mDatabase migrated successfully.\n";
+            echo "\e[32mDatabase migrated successfully.\e[0m\n";
         } catch (Throwable $throwable) {
-            echo "\e[31mDatabase migration failed.\n";
+            echo "\e[31mDatabase migration failed.\e[0m\n";
         }
 
         /** @var SeedHandler $seedHandler */
@@ -31,9 +31,9 @@ class PostAutoloadHandler
         try {
             $seedHandler->handle();
 
-            echo "\e[32mDatabase seeded successfully.\n";
+            echo "\e[32mDatabase seeded successfully.\e[0m\n";
         } catch (Throwable $throwable) {
-            echo "\e[31mDatabase seeding failed.\n";
+            echo "\e[31mDatabase seeding failed.\e[0m\n";
         }
     }
 }
