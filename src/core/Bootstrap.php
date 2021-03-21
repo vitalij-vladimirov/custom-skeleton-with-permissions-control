@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Core;
 
+use Core\Entity\Route;
 use Core\Exception\Api\InternalServerException;
-use Core\Exception\Api\NotFoundException;
 use Core\Entity\Request;
 use Core\Entity\Response;
 use Core\Enum\Environment;
 use Core\Enum\HttpMethod;
-use Core\Enum\ResponseCode;
 use Core\Middleware\AuthenticationMiddleware;
 use Core\Middleware\MiddlewareInterface;
 use Core\Middleware\PermissionsMiddleware;
 use Core\Service\ConfigReader;
 use Core\Service\DependencyInjector;
 use Core\Service\ExceptionHandler;
+use Core\Service\RoutesHandler;
 use Throwable;
 use PDO;
 use ReflectionMethod;
@@ -27,9 +27,7 @@ class Bootstrap
     public DependencyInjector $di;
     public PDO $pdo;
 
-    private string $controller;
-    private string $method;
-    private ?string $identifier = null;
+    private Route $route;
     private Request $request;
     private Response $response;
 
@@ -51,8 +49,7 @@ class Bootstrap
     public function runApi(): void
     {
         try {
-            $this->setControllerClass();
-            $this->setControllerMethod();
+            $this->setRoute();
             $this->validateController();
             $this->setupRequest();
             $this->runMiddleware();
@@ -102,50 +99,19 @@ class Bootstrap
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    private function setControllerClass(): void
+    private function setRoute(): void
     {
-        $path = explode('/', strtok($_SERVER["REQUEST_URI"], '?'));
-        $path = array_slice($path, 1);
-        foreach ($path as $key => $value) {
-            $value = str_replace(['-', '_'], ' ', $value);
-            $value = ucwords($value);
-            $camelcasePath[$key] = str_replace(' ', '', $value);
-        }
-
-        $controllerPath = sprintf('../app/Controller/%sController.php', implode('/', $camelcasePath));
-        if (!file_exists($controllerPath) && HttpMethod::isIdentifierAllowed() && count($camelcasePath) >= 2) {
-            $lastPathKey = array_key_last($camelcasePath);
-            $this->identifier = $path[$lastPathKey];
-            unset($camelcasePath[$lastPathKey]);
-
-            $controllerPath = sprintf('../app/Controller/%sController.php', implode('/', $camelcasePath));
-        }
-
-        if (!file_exists($controllerPath)) {
-            throw new NotFoundException();
-        }
-
-        require_once $controllerPath;
-
-        $this->controller = sprintf('\App\Controller\%sController', implode('\\', $camelcasePath));
-    }
-
-    private function setControllerMethod(): void
-    {
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
-
-        if ($this->method === HttpMethod::OPTIONS) {
-            $this->respondWithOptions();
-        }
-
-        if (!method_exists($this->controller, $this->method)) {
-            throw new NotFoundException();
-        }
+        /** @var RoutesHandler $routesReader */
+        $routesReader = $this->di->inject(RoutesHandler::class);
+        $this->route = $routesReader->getRoute();
     }
 
     private function validateController(): void
     {
-        $reflection = (new ReflectionMethod($this->controller, $this->method));
+        $controller = $this->route->class;
+        $method = $this->route->method;
+
+        $reflection = (new ReflectionMethod($controller, $method));
 
         if ($reflection->getNumberOfParameters() !== 2) {
             throw new InternalServerException();
@@ -175,8 +141,9 @@ class Bootstrap
     private function setupRequest(): void
     {
         $headers = getallheaders();
+        $httpMethod = strtolower($_SERVER['REQUEST_METHOD']);
 
-        switch ($this->method) {
+        switch ($httpMethod) {
             case HttpMethod::GET:
                 $content = $_GET;
                 break;
@@ -187,11 +154,11 @@ class Bootstrap
                 $content = $body !== '' ? json_decode($body, true) : [];
                 break;
             default:
-                $content = '';
+                $content = [];
         }
 
-        if ($this->identifier !== null) {
-            $content['identifier'] = $this->identifier;
+        if ($this->route->identifier !== null) {
+            $content['identifier'] = $this->route->identifier;
         }
 
         $this->request = new Request($content, $headers);
@@ -217,8 +184,8 @@ class Bootstrap
 
     private function runController(): void
     {
-        $controller = $this->di->inject($this->controller);
-        $this->response = $controller->{$this->method}($this->request, new Response());
+        $controller = $this->di->inject($this->route->class);
+        $this->response = $controller->{$this->route->method}($this->request, new Response());
     }
 
     private function respondSuccess(): void
@@ -238,21 +205,5 @@ class Bootstrap
         if (count($content) !== 0) {
             echo json_encode($content, JSON_THROW_ON_ERROR);
         }
-    }
-
-    private function respondWithOptions(): void
-    {
-        $methods = [];
-        foreach (HttpMethod::getAllowMethods() as $allowMethod) {
-            if (method_exists($this->controller, $allowMethod)) {
-                $methods[] = strtoupper($allowMethod);
-            }
-        }
-
-        header('Content-Type: text/plain charset=UTF-8');
-        header('Access-Control-Allow-Methods: ' . implode(',', $methods));
-        http_response_code(ResponseCode::NO_CONTENT);
-
-        exit;
     }
 }

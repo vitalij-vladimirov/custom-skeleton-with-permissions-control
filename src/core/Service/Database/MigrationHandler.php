@@ -10,7 +10,7 @@ use PDO;
 
 class MigrationHandler
 {
-    private const MIGRATIONS_DIR = '%s/../../../database/Migration/';
+    private const MIGRATIONS_DIR = __DIR__ . '/../../../database/Migration/';
     private const SQL_MIME_TYPE = 'text/plain';
     private const SQL_EXT = 'sql';
 
@@ -87,12 +87,14 @@ class MigrationHandler
 
     private function getListOfMigrations(int $latestVersion): array
     {
-        $dir = sprintf(self::MIGRATIONS_DIR, __DIR__);
-        $files = scandir($dir, 0);
+        $files = scandir(self::MIGRATIONS_DIR, 0);
 
         $migrations = [];
         foreach ($files as $file) {
-            if (mime_content_type($dir . $file) !== self::SQL_MIME_TYPE || substr($file, -3) !== self::SQL_EXT) {
+            if (
+                mime_content_type(self::MIGRATIONS_DIR . $file) !== self::SQL_MIME_TYPE
+                || substr($file, -3) !== self::SQL_EXT
+            ) {
                 continue;
             }
 
@@ -126,8 +128,6 @@ class MigrationHandler
 
     private function getQuery(string $migration)
     {
-        $path = sprintf(self::MIGRATIONS_DIR . $migration, __DIR__);
-
-        return file_get_contents($path);
+        return file_get_contents(self::MIGRATIONS_DIR . $migration);
     }
 }

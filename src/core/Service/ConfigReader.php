@@ -6,7 +6,7 @@ namespace Core\Service;
 
 class ConfigReader
 {
-    private const CONFIG_DIR = '%s/../../config/';
+    private const CONFIG_DIR = __DIR__ . '/../../config/';
     private const PHP_MIME_TYPE = 'text/x-php';
     private const PHP_EXT = 'php';
 
@@ -21,12 +21,11 @@ class ConfigReader
 
     private function readConfigDirectory(): array
     {
-        $dir = sprintf(self::CONFIG_DIR, __DIR__);
-        $files = scandir($dir);
+        $files = scandir(self::CONFIG_DIR);
 
         $config = [];
         foreach ($files as $file) {
-            if (mime_content_type($dir . $file) !== self::PHP_MIME_TYPE) {
+            if (mime_content_type(self::CONFIG_DIR . $file) !== self::PHP_MIME_TYPE) {
                 continue;
             }
 
@@ -44,7 +43,7 @@ class ConfigReader
 
     private function readConfigFile(string $configFile): array
     {
-        $path = sprintf(self::CONFIG_DIR . $configFile . '.' . self::PHP_EXT, __DIR__);
+        $path = self::CONFIG_DIR . $configFile . '.' . self::PHP_EXT;
 
         if (!file_exists($path)) {
             return [];
