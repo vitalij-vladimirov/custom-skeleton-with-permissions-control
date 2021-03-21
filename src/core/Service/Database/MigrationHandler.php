@@ -24,7 +24,7 @@ class MigrationHandler
         $this->entity = $entity;
         $this->db = $db;
         $this->configReader = $configReader;
-        $this->pdo = $GLOBALS['app']->db;
+        $this->pdo = $GLOBALS['pdo'];
     }
 
     public function handle(): void

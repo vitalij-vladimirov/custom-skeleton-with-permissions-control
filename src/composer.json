@@ -21,5 +21,10 @@
       "DB\\": "database/",
       "Core\\": "core/"
     }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "Core\\Service\\PostAutoloadHandler::postAutoloadDump"
+    ]
   }
 }

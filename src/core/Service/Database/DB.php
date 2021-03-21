@@ -9,17 +9,17 @@ use Throwable;
 
 class DB
 {
-    private PDO $db;
+    private PDO $pdo;
 
     public function __construct()
     {
-        $this->db = $GLOBALS['app']->db;
+        $this->pdo = $GLOBALS['pdo'];
     }
 
     public function rawQuery(string $query): array
     {
         $query = str_replace(';', '', $query);
-        $result = $this->db->query($query);
+        $result = $this->pdo->query($query);
 
         if ($result->rowCount() === 0) {
             return  [];
@@ -36,7 +36,7 @@ class DB
     public function count(string $query): int
     {
         $query = str_replace(';', '', $query);
-        $result = $this->db->query($query);
+        $result = $this->pdo->query($query);
 
         return $result->rowCount();
     }
@@ -56,13 +56,13 @@ class DB
         );
 
         try {
-            $this->db->exec($query);
+            $this->pdo->exec($query);
         } catch (Throwable $throwable) {
             // TODO: add exception
             return 0;
         }
 
-        return (int) $this->db->lastInsertId();
+        return (int) $this->pdo->lastInsertId();
     }
 
     public function update(string $table, int $id, array $data): bool
@@ -79,7 +79,7 @@ class DB
         $query = sprintf('UPDATE %s SET %s WHERE id = %d', $table, $update, $id);
 
         try {
-            $this->db->exec($query);
+            $this->pdo->exec($query);
         } catch (Throwable $throwable) {
             // TODO: add exception
             return false;
@@ -93,7 +93,7 @@ class DB
         $query = sprintf('DELETE FROM %s WHERE id = %d', $table, $id);
 
         try {
-            $this->db->exec($query);
+            $this->pdo->exec($query);
         } catch (Throwable $throwable) {
             // TODO: add exception
             return false;

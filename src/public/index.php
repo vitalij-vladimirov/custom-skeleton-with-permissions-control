@@ -8,4 +8,5 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/Bootstrap.php';
 
 $app = (new \Core\Bootstrap());
-$app->run();
+$GLOBALS['pdo'] = $app->pdo;
+$app->runApi();

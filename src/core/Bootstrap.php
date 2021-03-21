@@ -25,7 +25,7 @@ use ReflectionNamedType;
 class Bootstrap
 {
     public DependencyInjector $di;
-    public PDO $db;
+    public PDO $pdo;
 
     private string $controller;
     private string $method;
@@ -48,25 +48,27 @@ class Bootstrap
         $this->loadApp();
     }
 
-    public function run(): void
+    public function runApi(): void
     {
-        $controller = $this->di->inject($this->controller);
-        $this->response = $controller->{$this->method}($this->request, new Response());
-
-        $this->respondSuccess();
+        try {
+            $this->setControllerClass();
+            $this->setControllerMethod();
+            $this->validateController();
+            $this->setupRequest();
+            $this->runMiddleware();
+            $this->runController();
+            $this->respondSuccess();
+        } catch (Throwable $exception) {
+            (new ExceptionHandler())->handle($exception);
+        }
     }
 
     private function loadApp(): self
     {
         try {
             $this->setDefaults();
-            $this->setControllerClass();
-            $this->setControllerMethod();
-            $this->validateController();
-            $this->setupRequest();
             $this->setupDI();
             $this->setupDatabaseConnection();
-            $this->runMiddleware();
         } catch (Throwable $exception) {
             (new ExceptionHandler())->handle($exception);
         }
@@ -79,6 +81,25 @@ class Bootstrap
         $appConfig = (new ConfigReader())->read('app');
 
         define('ENVIRONMENT', $appConfig['app']['environment'] ?? Environment::PRODUCTION);
+    }
+
+    private function setupDI(): void
+    {
+        $this->di = new DependencyInjector();
+    }
+
+    private function setupDatabaseConnection(): void
+    {
+        /** @var ConfigReader $config */
+        $config = $this->di->inject(ConfigReader::class);
+        $db = $config->read('database')['database'];
+
+        $this->pdo = new PDO(
+            sprintf('mysql:host=%s:%d;dbname=%s', $db['host'], $db['port'], $db['database']),
+            $db['username'],
+            $db['password']
+        );
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
     private function setControllerClass(): void
@@ -176,23 +197,6 @@ class Bootstrap
         $this->request = new Request($content, $headers);
     }
 
-    private function setupDI(): void
-    {
-        $this->di = new DependencyInjector();
-    }
-
-    private function setupDatabaseConnection(): void
-    {
-        $db = (new ConfigReader())->read('database')['database'];
-
-        $this->db = new PDO(
-            sprintf('mysql:host=%s:%d;dbname=%s', $db['host'], $db['port'], $db['database']),
-            $db['username'],
-            $db['password']
-        );
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    }
-
     private function runMiddleware(): void
     {
         if (count($this->middleware) === 0) {
@@ -209,6 +213,12 @@ class Bootstrap
 
             $this->request = $middlewareClass->handle($this->request);
         }
+    }
+
+    private function runController(): void
+    {
+        $controller = $this->di->inject($this->controller);
+        $this->response = $controller->{$this->method}($this->request, new Response());
     }
 
     private function respondSuccess(): void
