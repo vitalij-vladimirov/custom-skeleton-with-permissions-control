@@ -16,12 +16,14 @@ class MigrationHandler
 
     private Migration $entity;
     private DB $db;
+    private ConfigReader $configReader;
     private PDO $pdo;
 
-    public function __construct(Migration $entity, DB $db)
+    public function __construct(Migration $entity, DB $db, ConfigReader $configReader)
     {
         $this->entity = $entity;
         $this->db = $db;
+        $this->configReader = $configReader;
         $this->pdo = $GLOBALS['app']->db;
     }
 
@@ -43,7 +45,7 @@ class MigrationHandler
 
     private function checkIfMigrationTableExists(): bool
     {
-        $db = (new ConfigReader())->read('database')['database'];
+        $db = $this->configReader->read('database')['database'];
 
         $query = sprintf(
             'SELECT * FROM information_schema.tables WHERE table_schema = \'%s\' AND table_name = \'%s\' LIMIT 1',
@@ -57,9 +59,11 @@ class MigrationHandler
     private function createMigrationTable(): void
     {
         $query = sprintf('CREATE TABLE IF NOT EXISTS `%s` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
                 `version` INT UNSIGNED NOT NULL,
                 `name` VARCHAR(50) NOT NULL,
-                `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP()
+                `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+                KEY `id` (`id`)
             ) ENGINE=InnoDB COLLATE=utf8mb4_general_ci',
             $this->entity->getTable()
         );

@@ -120,6 +120,7 @@ class QueryBuilder
 
     public function exists(): bool
     {
+        $this->select('id');
         $this->limit(1);
 
         return $this->count() === 1;
@@ -169,8 +170,8 @@ class QueryBuilder
     private function buildQuery(): string
     {
         $query = sprintf(
-            'SELECT %s FROM %s ',
-            implode(', ', $this->select),
+            'SELECT `%s` FROM %s ',
+            implode('`, `', $this->select),
             $this->entity->getTable()
         );
 

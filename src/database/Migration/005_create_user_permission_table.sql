@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `user_permission` (
   `uuid` varchar(36) NOT NULL,
   `user_id` int(11) NOT NULL,
   `permission` varchar(128) NOT NULL,
-  `grant` tinyint(1) unsigned NOT NULL DEFAULT '1',
+  `grant` tinyint(1) unsigned NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
   PRIMARY KEY (`uuid`),

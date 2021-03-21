@@ -9,6 +9,7 @@ use DateTimeImmutable;
 
 class Role extends BaseDbEntity
 {
+    public ?int $id;
     public ?string $uuid;
     public string $identifier;
     public string $title;

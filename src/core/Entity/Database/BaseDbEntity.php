@@ -14,7 +14,6 @@ use ReflectionProperty;
 
 abstract class BaseDbEntity
 {
-    public ?int $id;
     private self $original;
 
     protected const DATETIME_FORMAT = 'Y-m-d H:i:s';
@@ -59,31 +58,32 @@ abstract class BaseDbEntity
         return (new static())->db->rawQuery($query);
     }
 
-    public function save(): bool
-    {
-        if (!isset($this->original, $this->original->id) || $this->original->id === null) {
-            return (bool) $this->insertAndGetId();
-        }
-
-        $data = $this->generateUpdateData();
-        if (count($data) === 0) {
-            return false;
-        }
-
-        return $this->db->update($this->getTable(), $this->original->id, $data);
-    }
-
-    public function insertAndGetId(): int
+    public function save(): ?self
     {
         if (!isset($this->original, $this->original->id) || $this->original->id === null) {
             $this->autogenerateFields();
             $data = $this->generateInsertData();
 
-            return $this->db->insert($this->getTable(), $data);
+            $id = $this->db->insert($this->getTable(), $data);
+
+            // TODO: Throw exception here
+            if ($id === null) {
+                return null;
+            }
+
+            return $this::query()
+                ->whereQuery(sprintf('id = \'%s\'', $id))
+                ->first();
         }
 
-        // TODO: throw exception
-        return 0;
+        $data = $this->generateUpdateData();
+        if (count($data) === 0) {
+            return $this;
+        }
+
+        $this->db->update($this->getTable(), $this->original->id, $data);
+
+        return $this;
     }
 
     public function delete(): bool
@@ -282,6 +282,12 @@ abstract class BaseDbEntity
                 !isset($this->{$field->camelCaseName})
                 || in_array($field->camelCaseName, $this->restrictModify, true)
             ) {
+                continue;
+            }
+
+            if ($field->type === 'bool') {
+                $data[$field->snakeCaseName] = (int) $this->{$field->camelCaseName};
+
                 continue;
             }
 
