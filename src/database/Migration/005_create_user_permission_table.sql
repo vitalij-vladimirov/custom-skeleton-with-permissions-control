@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS `user_permission` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
   PRIMARY KEY (`uuid`),
   UNIQUE KEY `user_id_permission` (`user_id`,`permission`),
-  KEY `id` (`id`),
+  KEY `id` (`id`) USING BTREE,
   CONSTRAINT `user_permission_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

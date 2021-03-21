@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Core\Enum;
 
-class ResponseCode
+use Core\Service\Enum;
+
+class ResponseCode extends Enum
 {
     public const SUCCESS = 200;
     public const CREATED = 201;

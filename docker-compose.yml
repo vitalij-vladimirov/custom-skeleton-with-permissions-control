@@ -6,7 +6,6 @@ services:
     build:
       context: './conf'
       args:
-        - APP_ENV=${APP_ENV}
         - COMPOSER_NO_INTERACTION=0
     image: permissions-app
     volumes:

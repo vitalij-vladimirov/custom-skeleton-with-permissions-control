@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'UserAndRoleSeed' => [
+    \DB\Seed\UserAndRoleSeed::class => [
         \DB\Entity\User::class,
         \DB\Entity\Role::class,
         \DB\Entity\RolePermission::class,

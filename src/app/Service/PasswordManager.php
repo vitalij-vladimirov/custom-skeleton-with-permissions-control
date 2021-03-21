@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Core\Service;
+namespace App\Service;
 
 class PasswordManager
 {

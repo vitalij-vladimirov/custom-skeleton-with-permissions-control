@@ -27,23 +27,24 @@ class SeedHandler
         if (ENVIRONMENT !== Environment::LOCAL) {
             return;
         }
-
+        
         $seeds = $this->configReader->read('seed')['seed'];
-        foreach ($seeds as $seedName => $affectedTables) {
-            if ($this->areTablesAlreadyFilled($affectedTables)) {
+        foreach ($seeds as $seedClass => $affectedTables) {
+            // Seed Class is ran only if all affected tables are empty
+            if (!$this->areTablesEmpty($affectedTables)) {
                 continue;
             }
 
             /** @var BaseSeed $seed */
-            $seed = $this->di->inject(sprintf('\DB\Seed\%s', $seedName));
+            $seed = $this->di->inject($seedClass);
             $seed->run();
         }
     }
 
-    private function areTablesAlreadyFilled(array $tables): bool
+    private function areTablesEmpty(array $tables): bool
     {
         if (count($tables) === 0) {
-            return false;
+            return true;
         }
 
         foreach ($tables as $table) {
@@ -51,10 +52,10 @@ class SeedHandler
             $entity = new $table();
 
             if ($entity::query()->exists()) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 }

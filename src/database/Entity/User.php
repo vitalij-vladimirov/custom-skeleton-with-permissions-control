@@ -9,14 +9,14 @@ use DateTimeImmutable;
 
 class User extends BaseDbEntity
 {
-    public ?int $id;
-    public ?string $uuid;
+    public int $id;
+    public string $uuid;
     public string $email;
     public string $password;
     public string $firstName;
     public string $lastName;
-    public ?DateTimeImmutable $createdAt;
-    public ?DateTimeImmutable $updatedAt;
+    public DateTimeImmutable $createdAt;
+    public DateTimeImmutable $updatedAt;
 
     protected string $test;
 

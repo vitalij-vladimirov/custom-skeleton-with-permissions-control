@@ -9,12 +9,12 @@ use DateTimeImmutable;
 
 class UserRole extends BaseDbEntity
 {
-    public ?int $id;
-    public ?string $uuid;
+    public int $id;
+    public string $uuid;
     public int $userId;
     public int $roleId;
-    public ?DateTimeImmutable $createdAt;
-    public ?DateTimeImmutable $updatedAt;
+    public DateTimeImmutable $createdAt;
+    public DateTimeImmutable $updatedAt;
 
     public function getTable(): string
     {

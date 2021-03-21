@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS `user` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
   PRIMARY KEY (`uuid`),
   UNIQUE KEY `email` (`email`),
-  KEY `id` (`id`)
+  KEY `id` (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

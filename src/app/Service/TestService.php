@@ -21,6 +21,7 @@ class TestService
 
     public function testMethod(): User
     {
+        $this->migrationHandler->handle();
         $this->seedHandler->handle();
 
         exit;

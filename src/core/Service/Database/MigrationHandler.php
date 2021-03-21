@@ -63,7 +63,7 @@ class MigrationHandler
                 `version` INT UNSIGNED NOT NULL,
                 `name` VARCHAR(50) NOT NULL,
                 `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-                KEY `id` (`id`)
+                KEY `id` (`id`) USING BTREE
             ) ENGINE=InnoDB COLLATE=utf8mb4_general_ci',
             $this->entity->getTable()
         );

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Core\Enum;
 
-class HttpMethod
+use Core\Service\Enum;
+
+class HttpMethod extends Enum
 {
     public const GET = 'get';
     public const POST = 'post';
