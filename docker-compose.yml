@@ -35,7 +35,7 @@ services:
     image: mysql:5.7
     container_name: permissions-db
     environment:
-      MYSQL_DATABASE: permissions-db
+      MYSQL_DATABASE: permissions_task
       MYSQL_PASSWORD: root
       MYSQL_ROOT_PASSWORD: root
       TZ: UTC-0

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Core\Service;
+namespace Core\Service\Database;
 
-use Core\Entity\DbEntity;
+use Core\Entity\Database\BaseDbEntity;
 
 class QueryBuilder
 {
-    private DbEntity $entity;
+    private BaseDbEntity $entity;
     private DB $db;
     private array $select;
     private ?string $where = null;
@@ -19,7 +19,7 @@ class QueryBuilder
     private ?int $limit = null;
     private ?int $offset = null;
 
-    public function __construct(DbEntity $entity)
+    public function __construct(BaseDbEntity $entity)
     {
         $this->setup($entity);
     }
@@ -120,11 +120,13 @@ class QueryBuilder
 
     public function exists(): bool
     {
-        return $this->count() > 0;
+        $this->limit(1);
+
+        return $this->count() === 1;
     }
 
     /**
-     * @return DbEntity[]
+     * @return BaseDbEntity[]
      */
     public function get(): array
     {
@@ -143,7 +145,7 @@ class QueryBuilder
         return $entity;
     }
 
-    public function first(): ?DbEntity
+    public function first(): ?BaseDbEntity
     {
         $this->limit(1);
         $entity = $this->get();
@@ -155,7 +157,7 @@ class QueryBuilder
         return $entity[0];
     }
 
-    private function setup(DbEntity $entity): void
+    private function setup(BaseDbEntity $entity): void
     {
         $entityFields = $entity->getFields();
 

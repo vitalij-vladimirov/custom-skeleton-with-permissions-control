@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace DB\Entity;
 
-use Core\Entity\DbEntity;
+use Core\Entity\Database\BaseDbEntity;
 use DateTimeImmutable;
 
-class RolePermission extends DbEntity
+class RolePermission extends BaseDbEntity
 {
     public ?string $uuid;
     public int $roleId;

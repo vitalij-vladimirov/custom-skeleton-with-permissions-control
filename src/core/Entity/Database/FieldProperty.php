@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Core\Entity;
+namespace Core\Entity\Database;
 
-class DatabaseField
+class FieldProperty
 {
     public string $camelCaseName;
     public string $snakeCaseName;

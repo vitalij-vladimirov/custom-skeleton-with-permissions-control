@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Core\Service;
+namespace Core\Service\Database;
 
 use PDO;
 use Throwable;

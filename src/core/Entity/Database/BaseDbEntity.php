@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Core\Entity;
+namespace Core\Entity\Database;
 
-use Core\Service\DB;
+use Core\Service\Database\DB;
 use Core\Service\DependencyInjector;
-use Core\Service\QueryBuilder;
+use Core\Service\Database\QueryBuilder;
 use Core\Service\UuidGenerator;
 use DateTimeImmutable;
 use ReflectionClass;
 use ReflectionProperty;
 
-abstract class DbEntity
+abstract class BaseDbEntity
 {
     public ?int $id;
     private self $original;
@@ -20,7 +20,7 @@ abstract class DbEntity
     protected const DATETIME_FORMAT = 'Y-m-d H:i:s';
 
     /**
-     * @var DatabaseField[]
+     * @var FieldProperty[]
      */
     private array $fieldsProperties;
     private DB $db;
@@ -213,7 +213,7 @@ abstract class DbEntity
     }
 
     /**
-     * @return DatabaseField[]
+     * @return FieldProperty[]
      */
     private function getDatabaseFieldsProperties(): array
     {
@@ -235,9 +235,9 @@ abstract class DbEntity
         return $this->fieldsProperties;
     }
 
-    private function getDatabaseFieldProperties(ReflectionProperty $property): DatabaseField
+    private function getDatabaseFieldProperties(ReflectionProperty $property): FieldProperty
     {
-        $field = new DatabaseField();
+        $field = new FieldProperty();
         $propertyType = $property->getType();
         $field->type = $propertyType !== null ? $propertyType->getName() : 'string';
         $field->isNullable = $propertyType !== null ? $propertyType->allowsNull() : false;
@@ -249,7 +249,7 @@ abstract class DbEntity
         return $field;
     }
 
-    private function isDateTime(DatabaseField $field): bool
+    private function isDateTime(FieldProperty $field): bool
     {
         return strpos($field->type, 'DateTime') !== false;
     }

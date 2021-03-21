@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Core\Service;
 
-use Core\Entity\DbEntity;
+use Core\Entity\Database\BaseDbEntity;
 
 class UuidGenerator
 {
-    public function generate(?DbEntity $entity = null): string
+    public function generate(?BaseDbEntity $entity = null): string
     {
         if ($entity === null) {
             return $this->generateUuid();
@@ -17,7 +17,7 @@ class UuidGenerator
         return $this->generateUniqueUuid($entity);
     }
 
-    private function generateUniqueUuid(DbEntity $entity): string
+    private function generateUniqueUuid(BaseDbEntity $entity): string
     {
         do {
             $uuid = $this->generateUuid();
