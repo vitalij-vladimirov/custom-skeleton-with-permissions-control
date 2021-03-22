@@ -146,6 +146,10 @@ abstract class BaseDbEntity
      */
     public static function multipleToArray(array $entities): array
     {
+        if (count($entities) === 0) {
+            return [];
+        }
+
         $instance = new static();
 
         $normalizerEntityList = [];

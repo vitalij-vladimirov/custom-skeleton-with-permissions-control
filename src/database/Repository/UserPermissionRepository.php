@@ -17,7 +17,7 @@ class UserPermissionRepository
      */
     public function getByUser(User $user, bool $grant = null): array
     {
-        $query = sprintf('user_id = \'%s\'', $user->id);
+        $query = sprintf('user_id = %d', $user->id);
 
         if ($grant !== null) {
             $query .= sprintf(' AND `grant` = %d', (int) $grant);
@@ -25,6 +25,7 @@ class UserPermissionRepository
 
         return UserPermission::query()
             ->whereQuery($query)
+            ->orderBy('id')
             ->get();
     }
 }

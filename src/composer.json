@@ -20,7 +20,10 @@
       "App\\": "app/",
       "DB\\": "database/",
       "Core\\": "core/"
-    }
+    },
+    "files": [
+      "core/Helper/Helpers.php"
+    ]
   },
   "scripts": {
     "post-autoload-dump": [

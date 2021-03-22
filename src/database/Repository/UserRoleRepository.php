@@ -17,7 +17,8 @@ class UserRoleRepository
     public function getByUser(User $user): array
     {
         return UserRole::query()
-            ->whereQuery(sprintf('user_id = \'%s\'', $user->id))
+            ->whereQuery(sprintf('user_id = %d', $user->id))
+            ->orderBy('id')
             ->get();
     }
 }

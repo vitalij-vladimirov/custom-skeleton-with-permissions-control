@@ -5,17 +5,25 @@ declare(strict_types=1);
 namespace DB\Repository;
 
 use DB\Entity\RolePermission;
-use DB\Entity\UserRole;
+use DB\Entity\User;
 
 class RolePermissionRepository
 {
+    private UserRoleRepository $userRoleRepository;
+
+    public function __construct(UserRoleRepository $userRoleRepository)
+    {
+        $this->userRoleRepository = $userRoleRepository;
+    }
+
     /**
-     * @param UserRole[] $userRoles
+     * @param User $user
      *
      * @return RolePermission[]
      */
-    public function getByUserRoles(array $userRoles): array
+    public function getByUser(User $user): array
     {
+        $userRoles = $this->userRoleRepository->getByUser($user);
         if (count($userRoles) === 0) {
             return [];
         }
@@ -25,11 +33,7 @@ class RolePermissionRepository
             $roleIds[] = $role->roleId;
         }
 
-        $query = sprintf('role_id IN (\'%s\')', implode('\', \'', $roleIds));
-
-        return RolePermission::query()
-            ->whereQuery($query)
-            ->get();
+        return $this->getByRoleIds($roleIds);
     }
 
     /**
@@ -39,10 +43,11 @@ class RolePermissionRepository
      */
     private function getByRoleIds(array $roleIds): array
     {
-        $query = sprintf('role_id IN (\'%s\')', implode('\', \'', $roleIds));
+        $query = sprintf('role_id IN (%s)', implode(',', $roleIds));
 
         return RolePermission::query()
             ->whereQuery($query)
+            ->orderBy('id')
             ->get();
     }
 }

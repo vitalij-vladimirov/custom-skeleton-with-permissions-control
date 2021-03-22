@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Core\Middleware;
+namespace App\Middleware;
 
 use App\Service\PasswordManager;
 use Core\Entity\Request;
 use Core\Exception\Api\UnauthorizedException;
+use Core\Middleware\MiddlewareInterface;
 use DB\Repository\UserRepository;
 
 class AuthenticationMiddleware implements MiddlewareInterface

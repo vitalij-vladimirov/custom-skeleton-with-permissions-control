@@ -10,9 +10,7 @@ use Core\Entity\Request;
 use Core\Entity\Response;
 use Core\Enum\Environment;
 use Core\Enum\HttpMethod;
-use Core\Middleware\AuthenticationMiddleware;
 use Core\Middleware\MiddlewareInterface;
-use Core\Middleware\PermissionsMiddleware;
 use Core\Service\ConfigReader;
 use Core\Service\DependencyInjector;
 use Core\Service\ExceptionHandler;
@@ -27,19 +25,10 @@ class Bootstrap
     public DependencyInjector $di;
     public PDO $pdo;
 
+    private array $config;
     private Route $route;
     private Request $request;
     private Response $response;
-
-    /**
-     * @var MiddlewareInterface[]
-     *
-     * Setup a list of middleware here
-     */
-    private array $middleware = [
-        AuthenticationMiddleware::class,
-        PermissionsMiddleware::class,
-    ];
 
     public function __construct()
     {
@@ -63,8 +52,9 @@ class Bootstrap
     private function loadApp(): self
     {
         try {
-            $this->setDefaults();
             $this->setupDI();
+            $this->loadConfig();
+            $this->setDefaults();
             $this->setupDatabaseConnection();
         } catch (Throwable $exception) {
             (new ExceptionHandler())->handle($exception);
@@ -73,23 +63,28 @@ class Bootstrap
         return $this;
     }
 
-    private function setDefaults(): void
-    {
-        $appConfig = (new ConfigReader())->read('app');
-
-        define('ENVIRONMENT', $appConfig['app']['environment'] ?? Environment::PRODUCTION);
-    }
-
     private function setupDI(): void
     {
         $this->di = new DependencyInjector();
     }
 
-    private function setupDatabaseConnection(): void
+    private function loadConfig(): void
     {
         /** @var ConfigReader $config */
         $config = $this->di->inject(ConfigReader::class);
-        $db = $config->read('database')['database'];
+        $this->config = $config->read();
+    }
+
+    private function setDefaults(): void
+    {
+        $app = $this->config['app'];
+
+        define('ENVIRONMENT', $app['environment'] ?? Environment::PRODUCTION);
+    }
+
+    private function setupDatabaseConnection(): void
+    {
+        $db = $this->config['database'];
 
         $this->pdo = new PDO(
             sprintf('mysql:host=%s:%d;dbname=%s', $db['host'], $db['port'], $db['database']),
@@ -166,13 +161,14 @@ class Bootstrap
 
     private function runMiddleware(): void
     {
-        if (count($this->middleware) === 0) {
+        $middleware = $this->config['middleware'];
+        if (count($middleware) === 0) {
             return;
         }
 
-        foreach ($this->middleware as $middleware) {
+        foreach ($middleware as $namespace) {
             /** @var MiddlewareInterface $middlewareClass */
-            $middlewareClass = $this->di->inject($middleware);
+            $middlewareClass = $this->di->inject($namespace);
 
             if (!$middlewareClass instanceof MiddlewareInterface) {
                 throw new InternalServerException();

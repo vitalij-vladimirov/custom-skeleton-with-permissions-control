@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace DB\Seed;
 
 use App\Enum\Permission;
+use App\Factory\RoleFactory;
+use App\Factory\RolePermissionFactory;
+use App\Factory\UserFactory;
+use App\Factory\UserPermissionFactory;
+use App\Factory\UserRoleFactory;
 use Core\Service\Database\BaseSeed;
-use App\Service\PasswordManager;
 use DB\Entity\Role;
-use DB\Entity\RolePermission;
 use DB\Entity\User;
-use DB\Entity\UserPermission;
-use DB\Entity\UserRole;
 
 class UserAndRoleSeed implements BaseSeed
 {
@@ -25,7 +26,7 @@ class UserAndRoleSeed implements BaseSeed
         Permission::ROLE_PERMISSION_UPDATE,
         Permission::ROLE_PERMISSION_DELETE,
     ];
-    
+
     private const ADMIN_PERMISSIONS = [
         Permission::ROLE_VIEW,
         Permission::ROLE_PERMISSION_VIEW,
@@ -42,19 +43,32 @@ class UserAndRoleSeed implements BaseSeed
         Permission::USER_PERMISSION_UPDATE,
         Permission::USER_PERMISSION_DELETE,
     ];
-    
+
     private const USER_PERMISSIONS = [
         Permission::USER_SELF_VIEW,
         Permission::USER_SELF_UPDATE,
     ];
-    
+
     private const PASSWORD = 'Str0ngPassw0rd';
 
-    private PasswordManager $passwordManager;
+    private UserFactory $userFactory;
+    private RoleFactory $roleFactory;
+    private RolePermissionFactory $rolePermissionFactory;
+    private UserRoleFactory $userRoleFactory;
+    private UserPermissionFactory $userPermissionFactory;
 
-    public function __construct(PasswordManager $passwordManager)
-    {
-        $this->passwordManager = $passwordManager;
+    public function __construct(
+        UserFactory $userFactory,
+        RoleFactory $roleFactory,
+        RolePermissionFactory $rolePermissionFactory,
+        UserRoleFactory $userRoleFactory,
+        UserPermissionFactory $userPermissionFactory
+    ) {
+        $this->userFactory = $userFactory;
+        $this->roleFactory = $roleFactory;
+        $this->rolePermissionFactory = $rolePermissionFactory;
+        $this->userRoleFactory = $userRoleFactory;
+        $this->userPermissionFactory = $userPermissionFactory;
     }
 
     public function run(): void
@@ -74,33 +88,21 @@ class UserAndRoleSeed implements BaseSeed
     {
         $users = [];
 
-        $user = new User();
-        $user->firstName = 'Jim';
-        $user->lastName = 'Beam';
-        $user->email = 'sys_admin@example.com';
-        $user->password = $this->passwordManager->hashPassword(self::PASSWORD);
-        $users['sys_admin'] = $user->save();
+        $users['sys_admin'] = $this->userFactory
+            ->create('Jim', 'Beam', 'sys_admin@example.com', self::PASSWORD)
+            ->save();
 
-        $user = new User();
-        $user->firstName = 'Jack';
-        $user->lastName = 'Daniels';
-        $user->email = 'admin@example.com';
-        $user->password = $this->passwordManager->hashPassword(self::PASSWORD);
-        $users['admin'] = $user->save();
+        $users['admin'] = $this->userFactory
+            ->create('Jack', 'Daniels', 'admin@example.com', self::PASSWORD)
+            ->save();
 
-        $user = new User();
-        $user->firstName = 'Captain';
-        $user->lastName = 'Morgan';
-        $user->email = 'user1@example.com';
-        $user->password = $this->passwordManager->hashPassword(self::PASSWORD);
-        $users['user1'] = $user->save();
+        $users['user1'] = $this->userFactory
+            ->create('Captain', 'Morgan', 'user1@example.com', self::PASSWORD)
+            ->save();
 
-        $user = new User();
-        $user->firstName = 'Jose';
-        $user->lastName = 'Cuervo';
-        $user->email = 'user2@example.com';
-        $user->password = $this->passwordManager->hashPassword(self::PASSWORD);
-        $users['user2'] = $user->save();
+        $users['user2'] = $this->userFactory
+            ->create('Jose', 'Cuervo', 'user2@example.com', self::PASSWORD)
+            ->save();
 
         return $users;
     }
@@ -112,20 +114,9 @@ class UserAndRoleSeed implements BaseSeed
     {
         $roles = [];
 
-        $role = new Role();
-        $role->identifier = 'sys_admin';
-        $role->title = 'System administrator';
-        $roles['sys_admin'] = $role->save();
-
-        $role = new Role();
-        $role->identifier = 'admin';
-        $role->title = 'Administrator';
-        $roles['admin'] = $role->save();
-
-        $role = new Role();
-        $role->identifier = 'user';
-        $role->title = 'User';
-        $roles['user'] = $role->save();
+        $roles['sys_admin'] = $this->roleFactory->create('sys_admin', 'System administrator')->save();
+        $roles['admin'] = $this->roleFactory->create('admin', 'Administrator')->save();
+        $roles['user'] = $this->roleFactory->create('user', 'User')->save();
 
         return $roles;
     }
@@ -137,26 +128,17 @@ class UserAndRoleSeed implements BaseSeed
     {
         // System Administrator permissions
         foreach (self::SYS_ADMIN_PERMISSIONS as $permission) {
-            $rolePermission = new RolePermission();
-            $rolePermission->roleId = $roles['sys_admin']->id;
-            $rolePermission->permission = $permission;
-            $rolePermission->save();
+            $this->rolePermissionFactory->create($roles['sys_admin'], $permission)->save();
         }
 
         // Administrator permissions
         foreach (self::ADMIN_PERMISSIONS as $permission) {
-            $rolePermission = new RolePermission();
-            $rolePermission->roleId = $roles['admin']->id;
-            $rolePermission->permission = $permission;
-            $rolePermission->save();
+            $this->rolePermissionFactory->create($roles['admin'], $permission)->save();
         }
 
         // User permissions
         foreach (self::USER_PERMISSIONS as $permission) {
-            $rolePermission = new RolePermission();
-            $rolePermission->roleId = $roles['user']->id;
-            $rolePermission->permission = $permission;
-            $rolePermission->save();
+            $this->rolePermissionFactory->create($roles['user'], $permission)->save();
         }
     }
 
@@ -167,70 +149,27 @@ class UserAndRoleSeed implements BaseSeed
     private function createUserRoles(array $users, array $roles): void
     {
         // System Administrator has all roles
-        $userRole = new UserRole();
-        $userRole->userId = $users['sys_admin']->id;
-        $userRole->roleId = $roles['sys_admin']->id;
-        $userRole->save();
-        
-        $userRole = new UserRole();
-        $userRole->userId = $users['sys_admin']->id;
-        $userRole->roleId = $roles['admin']->id;
-        $userRole->save();
-        
-        $userRole = new UserRole();
-        $userRole->userId = $users['sys_admin']->id;
-        $userRole->roleId = $roles['user']->id;
-        $userRole->save();
+        $this->userRoleFactory->create($users['sys_admin'], $roles['sys_admin'])->save();
+        $this->userRoleFactory->create($users['sys_admin'], $roles['admin'])->save();
+        $this->userRoleFactory->create($users['sys_admin'], $roles['user'])->save();
         
         // Administrator has `admin` and `user` roles
-        $userRole = new UserRole();
-        $userRole->userId = $users['admin']->id;
-        $userRole->roleId = $roles['admin']->id;
-        $userRole->save();
-        
-        $userRole = new UserRole();
-        $userRole->userId = $users['admin']->id;
-        $userRole->roleId = $roles['user']->id;
-        $userRole->save();
+        $this->userRoleFactory->create($users['admin'], $roles['admin'])->save();
+        $this->userRoleFactory->create($users['admin'], $roles['user'])->save();
         
         // User has only `user` role
-        $userRole = new UserRole();
-        $userRole->userId = $users['user1']->id;
-        $userRole->roleId = $roles['user']->id;
-        $userRole->save();
-        
-        $userRole = new UserRole();
-        $userRole->userId = $users['user2']->id;
-        $userRole->roleId = $roles['user']->id;
-        $userRole->save();
+        $this->userRoleFactory->create($users['user1'], $roles['user'])->save();
+        $this->userRoleFactory->create($users['user2'], $roles['user'])->save();
     }
 
     public function createUserPermissions(array $users): void
     {
         // This system admin is restricted to delete users
-        $userPermission = new UserPermission();
-        $userPermission->userId = $users['sys_admin']->id;
-        $userPermission->permission = Permission::USER_DELETE;
-        $userPermission->grant = false;
-        $userPermission->save();
+        $this->userPermissionFactory->create($users['sys_admin'], Permission::USER_DELETE, false)->save();
 
         // This user has additional permissions to view roles and users + create users
-        $userPermission = new UserPermission();
-        $userPermission->userId = $users['user1']->id;
-        $userPermission->permission = Permission::ROLE_VIEW;
-        $userPermission->grant = true;
-        $userPermission->save();
-
-        $userPermission = new UserPermission();
-        $userPermission->userId = $users['user1']->id;
-        $userPermission->permission = Permission::USER_VIEW;
-        $userPermission->grant = true;
-        $userPermission->save();
-
-        $userPermission = new UserPermission();
-        $userPermission->userId = $users['user1']->id;
-        $userPermission->permission = Permission::USER_CREATE;
-        $userPermission->grant = true;
-        $userPermission->save();
+        $this->userPermissionFactory->create($users['user1'], Permission::ROLE_VIEW, true)->save();
+        $this->userPermissionFactory->create($users['user1'], Permission::USER_VIEW, true)->save();
+        $this->userPermissionFactory->create($users['user1'], Permission::USER_CREATE, true)->save();
     }
 }

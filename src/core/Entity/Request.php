@@ -6,7 +6,7 @@ namespace Core\Entity;
 
 class Request
 {
-    /** @var string[] */
+    /** @var mixed[] */
     private array $content;
     /** @var string[] */
     private array $headers;
@@ -19,6 +19,9 @@ class Request
         $this->headers = $headers;
     }
 
+    /**
+     * @return string[]|int[]|float[]|bool[]
+     */
     public function getContent(): array
     {
         return $this->content;
@@ -34,6 +37,9 @@ class Request
         return $this->headers[$key] ?? null;
     }
 
+    /**
+     * @return object[]|string[]|int[]|float[]|bool[]
+     */
     public function getParams(): array
     {
         return array_merge($this->params, $this->content);

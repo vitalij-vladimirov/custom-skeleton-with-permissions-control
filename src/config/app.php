@@ -1,7 +1,5 @@
 <?php
 
-use Core\Enum\Environment;
-
 return [
-    'environment' => Environment::LOCAL,
+    'environment' => \Core\Enum\Environment::LOCAL,
 ];

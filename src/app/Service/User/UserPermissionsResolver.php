@@ -2,57 +2,33 @@
 
 declare(strict_types=1);
 
-namespace Core\Middleware;
+namespace App\Service\User;
 
-use Core\Entity\Request;
 use DB\Entity\RolePermission;
 use DB\Entity\User;
 use DB\Entity\UserPermission;
 use DB\Repository\RolePermissionRepository;
 use DB\Repository\UserPermissionRepository;
-use DB\Repository\UserRoleRepository;
 
-class PermissionsMiddleware implements MiddlewareInterface
+class UserPermissionsResolver
 {
-    private UserRoleRepository $userRoleRepository;
     private UserPermissionRepository $userPermissionRepository;
     private RolePermissionRepository $rolePermissionRepository;
 
     public function __construct(
-        UserRoleRepository $userRoleRepository,
         UserPermissionRepository $userPermissionRepository,
         RolePermissionRepository $rolePermissionRepository
     ) {
-        $this->userRoleRepository = $userRoleRepository;
         $this->userPermissionRepository = $userPermissionRepository;
         $this->rolePermissionRepository = $rolePermissionRepository;
     }
 
-    public function handle(Request $request): Request
+    public function getUserPermissions(User $user): array
     {
-        /** @var User|null $user */
-        $user = $request->getParam('user');
-        if ($user === null) {
-            $request->addParam('permissions', []);
-
-            return $request;
-        }
-
-        $userRoles = $this->userRoleRepository->getByUser($user);
-        if (count($userRoles) === 0) {
-            $userPermissions = $this->userPermissionRepository->getByUser($user, true);
-
-            $request->addParam('permissions', $this->resolvePermissions([], $userPermissions));
-
-            return $request;
-        }
-
-        $rolePermissions = $this->rolePermissionRepository->getByUserRoles($userRoles);
+        $rolePermissions = $this->rolePermissionRepository->getByUser($user);
         $userPermissions = $this->userPermissionRepository->getByUser($user);
 
-        $request->addParam('permissions', $this->resolvePermissions($rolePermissions, $userPermissions));
-
-        return $request;
+        return $this->resolvePermissions($rolePermissions, $userPermissions);
     }
 
     /**

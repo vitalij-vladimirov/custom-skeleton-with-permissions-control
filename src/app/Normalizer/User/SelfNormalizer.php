@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Normalizer;
+namespace App\Normalizer\User;
 
 use DB\Entity\User;
 
-class UserNormalizer
+class SelfNormalizer
 {
     public function normalize(User $user): array
     {
