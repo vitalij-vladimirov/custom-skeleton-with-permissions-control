@@ -4,11 +4,12 @@
 
 ---
 ### First launch
-- `make first-run` - will run `docker-compose up -d` and automatically
+1. `make start` - will run `docker-compose up -d`
     - Launch container with PHP 7.4, Nginx, MySQL 5.7
-    - Install composer
-    - Run migrations
-    - Run seeds
+2. `make setup` - will run (*on the first launch wait 30-120 sec. while database is created in `data/mysql`*):
+    - Composer install
+    - Migrations
+    - Seeds
 - If you want to run application without docker, run `composer install` in `src` directory, this will install composer dependencies, run migrations and seeds
 
 ### App configuration
@@ -25,8 +26,7 @@
     - pass: `root`
 
 ### Other commands
-- `make start` - application launch without running composer, migrations and seeds
-- `make setup` - run dependencies (composer install, migrations, seeds) on already started app
+- `make first-run` - runs both `start` and `setup` commands, but may fail on slow computers because migrations may run earlier that database is created
 - `make stop` - exit application and stop docker container
 - `make destroy` - destroy docker image
 - `make rebuild` - destroy image, build image, run dependencies
