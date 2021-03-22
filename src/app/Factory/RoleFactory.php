@@ -16,4 +16,13 @@ class RoleFactory
 
         return $role;
     }
+
+    public function createFromContent(array $content): Role
+    {
+        $role = new Role();
+        $role->identifier = $content['identifier'];
+        $role->title = $content['title'];
+
+        return $role;
+    }
 }

@@ -40,4 +40,14 @@ class UserRepository
             ->orderBy('id')
             ->get();
     }
+
+    public function save(User $user): User
+    {
+        return $user->save();
+    }
+
+    public function delete(User $user): bool
+    {
+        return $user->delete();
+    }
 }

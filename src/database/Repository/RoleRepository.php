@@ -17,6 +17,14 @@ class RoleRepository
     }
 
     /**
+     * @return Role[]
+     */
+    public function get(): array
+    {
+        return Role::query()->get();
+    }
+
+    /**
      * @param User $user
      *
      * @return Role[]
@@ -69,5 +77,15 @@ class RoleRepository
             ->first();
 
         return $role;
+    }
+
+    public function save(Role $role): Role
+    {
+        return $role->save();
+    }
+
+    public function delete(Role $role): bool
+    {
+        return $role->delete();
     }
 }

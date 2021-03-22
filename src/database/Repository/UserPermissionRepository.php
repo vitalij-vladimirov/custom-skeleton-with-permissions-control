@@ -28,4 +28,14 @@ class UserPermissionRepository
             ->orderBy('id')
             ->get();
     }
+
+    public function save(UserPermission $userPermission): UserPermission
+    {
+        return $userPermission->save();
+    }
+
+    public function delete(UserPermission $userPermission): bool
+    {
+        return $userPermission->delete();
+    }
 }

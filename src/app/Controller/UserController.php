@@ -142,7 +142,7 @@ class UserController
             throw new NotFoundException();
         }
 
-        $this->userManager->delete($user);
+        $this->userRepository->delete($user);
 
         return $response->withResponseCode(ResponseCode::NO_CONTENT);
     }

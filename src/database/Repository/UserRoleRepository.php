@@ -21,4 +21,14 @@ class UserRoleRepository
             ->orderBy('id')
             ->get();
     }
+
+    public function save(UserRole $userRole): UserRole
+    {
+        return $userRole->save();
+    }
+
+    public function delete(UserRole $userRole): bool
+    {
+        return $userRole->delete();
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DB\Repository;
 
+use DB\Entity\Role;
 use DB\Entity\RolePermission;
 use DB\Entity\User;
 
@@ -49,5 +50,24 @@ class RolePermissionRepository
             ->whereQuery($query)
             ->orderBy('id')
             ->get();
+    }
+
+    public function getByRole(Role $role): array
+    {
+        $query = sprintf('role_id = %d', $role->id);
+
+        return RolePermission::query()
+            ->whereQuery($query)
+            ->get();
+    }
+
+    public function save(RolePermission $rolePermission): RolePermission
+    {
+        return $rolePermission->save();
+    }
+
+    public function delete(RolePermission $rolePermission): bool
+    {
+        return $rolePermission->delete();
     }
 }

@@ -10,6 +10,7 @@ use App\Service\Permission\UserPermissionManager;
 use App\Service\Permission\UserRoleManager;
 use Core\Exception\Api\BadRequestException;
 use DB\Entity\User;
+use DB\Repository\UserRepository;
 
 class UserManager
 {
@@ -17,17 +18,20 @@ class UserManager
     private UserFactory $userFactory;
     private UserRoleManager $userRoleManager;
     private UserPermissionManager $userPermissionManager;
+    private UserRepository $userRepository;
 
     public function __construct(
         PasswordManager $passwordManager,
         UserFactory $userFactory,
         UserRoleManager $userRoleManager,
-        UserPermissionManager $userPermissionManager
+        UserPermissionManager $userPermissionManager,
+        UserRepository $userRepository
     ) {
         $this->passwordManager = $passwordManager;
         $this->userFactory = $userFactory;
         $this->userRoleManager = $userRoleManager;
         $this->userPermissionManager = $userPermissionManager;
+        $this->userRepository = $userRepository;
     }
 
     public function update(User $user, array $data): User
@@ -51,12 +55,13 @@ class UserManager
             $user->password = $this->passwordManager->hashPassword($data['password']);
         }
 
-        return $user->save();
+        return $this->userRepository->save($user);
     }
 
     public function create(array $content): User
     {
-        $user = $this->userFactory->createFromContent($content)->save();
+        $user = $this->userFactory->createFromContent($content);
+        $user = $this->userRepository->save($user);
 
         if ($user === null) {
             throw new BadRequestException();
@@ -75,10 +80,5 @@ class UserManager
         }
 
         return $user;
-    }
-
-    public function delete(User $user): bool
-    {
-        return $user->delete();
     }
 }
