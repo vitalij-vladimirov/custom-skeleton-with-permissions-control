@@ -8,16 +8,22 @@ use App\Factory\UserRoleFactory;
 use DB\Entity\User;
 use DB\Entity\UserRole;
 use DB\Repository\RoleRepository;
+use DB\Repository\UserRoleRepository;
 
 class UserRoleManager
 {
     private RoleRepository $roleRepository;
     private UserRoleFactory $userRoleFactory;
+    private UserRoleRepository $userRoleRepository;
 
-    public function __construct(RoleRepository $roleRepository, UserRoleFactory $userRoleFactory)
-    {
+    public function __construct(
+        RoleRepository $roleRepository,
+        UserRoleFactory $userRoleFactory,
+        UserRoleRepository $userRoleRepository
+    ) {
         $this->roleRepository = $roleRepository;
         $this->userRoleFactory = $userRoleFactory;
+        $this->userRoleRepository = $userRoleRepository;
     }
 
     public function create(User $user, string $identifier): ?UserRole
@@ -32,6 +38,6 @@ class UserRoleManager
 
         $userRole = $this->userRoleFactory->create($user, $role);
 
-        return $userRole->save();
+        return $this->userRoleRepository->save($userRole);
     }
 }

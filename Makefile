@@ -7,7 +7,7 @@ stop:
 destroy:
 	docker-compose down -v
 
-rebuild: destroy start
+rebuild: destroy start setup
 
 setup:
 	docker-compose exec app bash -c "composer install"

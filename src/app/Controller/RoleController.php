@@ -70,29 +70,6 @@ class RoleController
             ->withResponseCode(ResponseCode::CREATED);
     }
 
-//    public function update(Request $request, Response $response): Response
-//    {
-//        $this->hasPermission($request, Permission::USER_UPDATE);
-//        $this->isNotSelfModify($request);
-//
-//        $identifier = $request->getParam('identifier');
-//        if ($identifier === null) {
-//            throw new NotFoundException();
-//        }
-//
-//        $user = $this->userRepository->getOneByUuid($identifier);
-//        if ($user === null) {
-//            throw new NotFoundException();
-//        }
-//
-//        $data = $request->getContent();
-//
-//        $updatedUser = $this->userManager->update($user, $data);
-//        $normalized = $this->selfNormalizer->normalize($updatedUser);
-//
-//        return $response->withContent($normalized);
-//    }
-
     public function delete(Request $request, Response $response): Response
     {
         $this->hasPermission($request, Permission::USER_DELETE);
