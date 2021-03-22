@@ -14,7 +14,6 @@ services:
     environment:
       - LOG_STDOUT=/dev/null
       - LOG_STDERR=/dev/null
-    command: composer install
     restart: unless-stopped
 
   nginx:
